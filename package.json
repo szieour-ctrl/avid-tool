@@ -1,0 +1,9 @@
+{
+  "name": "avid-tool",
+  "version": "1.0.0",
+  "description": "AVID Draft Generator — SZ Real Estate Group",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0",
+    "pdf-lib": "^1.17.1"
+  }
+}
