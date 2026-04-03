@@ -47,8 +47,7 @@ function decryptPdf(pdfBytes) {
   try {
     fs.writeFileSync(inPath, pdfBytes);
     execSync(`qpdf --password="" --decrypt "${inPath}" "${outPath}"`, { timeout: 15000 });
-    const decrypted = fs.readFileSync(outPath);
-    return decrypted;
+    return fs.readFileSync(outPath);
   } catch (e) {
     console.error("qpdf error:", e.message);
     return pdfBytes;
@@ -186,7 +185,7 @@ async function extractFromTranscript(transcript) {
 
 async function fillPdf(pdfBytes, data) {
   const decryptedBytes = decryptPdf(pdfBytes);
-  const pdfDoc = await PDFDocument.load(decryptedBytes);
+  const pdfDoc = await PDFDocument.load(decryptedBytes, { ignoreEncryption: true });
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const pages = pdfDoc.getPages();
   const fields = buildFields(data);
@@ -196,7 +195,7 @@ async function fillPdf(pdfBytes, data) {
     if (!page) continue;
     page.drawText(fld.text, { x: fld.x, y: fld.y, size: fld.fs || FS, font, color: rgb(0, 0, 0) });
   }
-  return await pdfDoc.save();
+  return await pdfDoc.save({ useObjectStreams: false });
 }
 
 exports.handler = async (event) => {
