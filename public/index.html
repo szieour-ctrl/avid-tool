@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVID Draft Generator — SZ Real Estate Group</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a18; --paper: #f7f5f0; --card: #ffffff;
+    --muted: #7a7870; --border: #dddbd4;
+    --accent: #2d5a3d; --accent-light: #e8f0eb;
+    --danger: #8a1a1a; --danger-light: #fdecea;
+    --warn: #8a4a1a; --warn-light: #fdf0e6;
+    --success: #1a5a3a; --success-light: #e8f5ee;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; font-size: 14px; }
+  .header { background: var(--ink); color: #f0ede6; padding: 22px 40px 18px; border-bottom: 3px solid var(--accent); display: flex; align-items: baseline; gap: 16px; }
+  .header h1 { font-family: 'DM Serif Display', serif; font-size: 24px; font-weight: 400; }
+  .header span { font-family: 'DM Mono', monospace; font-size: 11px; color: #7a8; letter-spacing: 0.1em; }
+  .layout { display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 72px); }
+  .pane { padding: 28px 32px; }
+  .pane-left { border-right: 1px solid var(--border); }
+  .pane-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .pane-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  textarea { width: 100%; height: 200px; font-family: 'DM Mono', monospace; font-size: 12px; line-height: 1.7; color: var(--ink); background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 14px; resize: vertical; outline: none; }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: #b0aea8; }
+  .upload-zone { margin-top: 14px; border: 1.5px dashed var(--border); border-radius: 6px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--card); }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--accent-light); }
+  .upload-zone input { display: none; }
+  .upload-zone .icon { font-size: 24px; opacity: 0.4; display: block; margin-bottom: 6px; }
+  .upload-zone p { font-size: 13px; color: var(--muted); }
+  .upload-zone .file-name { font-size: 12px; color: var(--accent); font-family: 'DM Mono', monospace; margin-top: 6px; }
+  .btn { width: 100%; margin-top: 14px; padding: 11px 0; background: var(--accent); color: #fff; border: none; border-radius: 5px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s; }
+  .btn:hover { background: #234a30; }
+  .btn:disabled { background: #9ab0a0; cursor: not-allowed; }
+  .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box { margin-top: 12px; background: var(--danger-light); border: 1px solid #f0c0be; border-radius: 6px; padding: 12px 14px; color: var(--danger); font-size: 13px; display: none; }
+  .notice { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+  .empty-state { height: 340px; border: 1px dashed var(--border); border-radius: 6px; background: var(--card); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--muted); }
+  .empty-state .icon { font-size: 32px; opacity: 0.3; }
+  .summary-bar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-family: 'DM Mono', monospace; }
+  .pill-ok { background: var(--success-light); color: var(--success); }
+  .pill-warn { background: var(--warn-light); color: var(--warn); }
+  .pill-miss { background: var(--danger-light); color: var(--danger); }
+  .download-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer; margin-bottom: 16px; text-decoration: none; transition: background 0.15s; }
+  .download-btn:hover { background: #234a30; }
+  .avid-section { background: var(--card); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
+  .avid-section-hdr { background: var(--ink); color: #e8e5de; padding: 7px 14px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .avid-field { display: grid; grid-template-columns: 130px 1fr; gap: 10px; padding: 8px 14px; border-top: 1px solid #eee; align-items: start; }
+  .field-lbl { font-size: 11px; font-weight: 500; color: var(--muted); font-family: 'DM Mono', monospace; padding-top: 2px; }
+  .field-val { font-size: 13px; line-height: 1.5; }
+  .field-val.missing { color: var(--danger); font-style: italic; }
+  .field-val.partial { color: var(--warn); }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-family: 'DM Mono', monospace; margin-left: 5px; vertical-align: middle; }
+  .b-ok { background: var(--success-light); color: var(--success); }
+  .b-warn { background: var(--warn-light); color: var(--warn); }
+  .b-miss { background: var(--danger-light); color: var(--danger); }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } .pane-left { border-right: none; border-bottom: 1px solid var(--border); } }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>AVID Draft Generator</h1>
+  <span>SZ Real Estate Group · C.A.R. Form AVID Rev. 6/24</span>
+</div>
+<div class="layout">
+  <div class="pane pane-left">
+    <div class="pane-label">1 — Otter.ai transcript</div>
+    <textarea id="transcript" placeholder="Paste your Otter.ai transcript here...
+
+Tips:
+- State address, date, time, weather at the start
+- Say 'I am now in the [room name]' before each room
+- Number bedrooms and baths (Bedroom 1, Bath 1…)
+- Walk the full exterior perimeter"></textarea>
+    <div class="pane-label" style="margin-top:18px">2 — AVID PDF from Lone Wolf</div>
+    <div class="upload-zone" id="dropZone" onclick="document.getElementById('pdfInput').click()">
+      <input type="file" id="pdfInput" accept=".pdf" onchange="handleFile(this.files[0])">
+      <span class="icon">📄</span>
+      <p>Click to upload or drag & drop your AVID PDF</p>
+      <div class="file-name" id="fileName"></div>
+    </div>
+    <button class="btn" id="generateBtn" onclick="generate()">
+      <span id="btnText">Generate & Fill AVID</span>
+      <div class="spinner" id="btnSpinner"></div>
+    </button>
+    <div class="error-box" id="errorBox"></div>
+    <p class="notice">⚠ Review all entries before signing. Agent is responsible for the accuracy of the completed AVID.</p>
+  </div>
+  <div class="pane">
+    <div class="pane-label">AVID field draft</div>
+    <div id="emptyState" class="empty-state">
+      <span class="icon">📋</span>
+      <p style="font-size:13px;text-align:center;max-width:180px;line-height:1.5">Upload your AVID PDF and transcript, then click Generate</p>
+    </div>
+    <div id="outputArea" style="display:none"></div>
+  </div>
+</div>
+<script>
+let pdfFile = null;
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); const file = e.dataTransfer.files[0]; if (file && file.type === 'application/pdf') handleFile(file); });
+function handleFile(file) { if (!file) return; pdfFile = file; document.getElementById('fileName').textContent = file.name; }
+function setLoading(on) { const btn = document.getElementById('generateBtn'); btn.disabled = on; document.getElementById('btnSpinner').style.display = on ? 'block' : 'none'; document.getElementById('btnText').textContent = on ? 'Generating…' : 'Generate & Fill AVID'; }
+function showError(msg) { const box = document.getElementById('errorBox'); box.textContent = msg; box.style.display = 'block'; }
+function toBase64(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(file); }); }
+async function generate() {
+  const transcript = document.getElementById('transcript').value.trim();
+  if (!transcript) { showError('Please paste a transcript.'); return; }
+  if (!pdfFile) { showError('Please upload your AVID PDF from Lone Wolf.'); return; }
+  document.getElementById('errorBox').style.display = 'none';
+  setLoading(true);
+  try {
+    const pdfBase64 = await toBase64(pdfFile);
+    const resp = await fetch('/.netlify/functions/fill-avid', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ transcript, pdfBase64 }) });
+    if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.error || `Server error ${resp.status}`); }
+    const result = await resp.json();
+    renderOutput(result);
+  } catch (e) { showError('Error: ' + e.message); } finally { setLoading(false); }
+}
+function badge(status) { const map = { captured: 'b-ok', partial: 'b-warn', missing: 'b-miss' }; return `<span class="badge ${map[status] || 'b-miss'}">${status || 'missing'}</span>`; }
+function fieldRow(label, obj) { const o = obj || { text: '', status: 'missing' }; const isEmpty = !o.text || o.status === 'missing'; const cls = isEmpty ? 'missing' : o.status === 'partial' ? 'partial' : ''; return `<div class="avid-field"><div class="field-lbl">${label}</div><div class="field-val ${cls}">${o.text || '— not captured'}${badge(o.status)}</div></div>`; }
+function renderOutput(result) {
+  const { data, pdfBase64, filename } = result;
+  const s = data.summary || {}; const i = data.interior || {}; const ex = data.exterior || {};
+  let html = `<div class="summary-bar"><span class="pill pill-ok">✓ ${s.captured_count || 0} captured</span><span class="pill pill-warn">~ ${s.partial_count || 0} partial</span><span class="pill pill-miss">✗ ${s.missing_count || 0} missing</span></div>`;
+  if (pdfBase64) html += `<a class="download-btn" href="data:application/pdf;base64,${pdfBase64}" download="${filename || 'AVID_filled.pdf'}">⬇ Download Filled AVID PDF</a>`;
+  html += `<div class="avid-section"><div class="avid-section-hdr">Page 2 — Interior rooms</div>${fieldRow('Entry',i.entry)}${fieldRow('Living room',i.living_room)}${fieldRow('Dining room',i.dining_room)}${fieldRow('Kitchen',i.kitchen)}${fieldRow('Other room',i.other_room)}${fieldRow('Hall / stairs',i.hall_stairs)}${fieldRow('Bedroom 1',i.bedroom_1)}${fieldRow('Bedroom 2',i.bedroom_2)}${fieldRow('Bedroom 3',i.bedroom_3)}${fieldRow('Bedroom 4',i.bedroom_4)}${fieldRow('Bath 1',i.bath_1)}${fieldRow('Bath 2',i.bath_2)}${fieldRow('Bath 3',i.bath_3)}${fieldRow('Bath 4',i.bath_4)}</div>`;
+  html += `<div class="avid-section"><div class="avid-section-hdr">Page 3 — Exterior & other</div>${fieldRow('Garage / parking',ex.garage_parking)}${fieldRow('Exterior & yard',ex.exterior_building_yard)}${fieldRow('Other conditions',ex.other_conditions)}</div>`;
+  if (s.notes) html += `<div style="background:var(--warn-light);border:1px solid #e8d0b0;border-radius:6px;padding:12px 14px;font-size:12px;color:var(--warn);line-height:1.5;margin-top:4px"><strong>Notes:</strong> ${s.notes}</div>`;
+  document.getElementById('emptyState').style.display = 'none';
+  const out = document.getElementById('outputArea'); out.style.display = 'block'; out.innerHTML = html;
+}
+</script>
+</body>
+</html>
