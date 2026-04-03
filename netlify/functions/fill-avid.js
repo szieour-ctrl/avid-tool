@@ -1,9 +1,5 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
-const { execSync } = require("child_process");
-const fs = require("fs");
-const os = require("os");
-const path = require("path");
 
 const PAGE_H = 792;
 const FS = 8.5;
@@ -38,23 +34,6 @@ function getVal(d, key) {
   const v = d[key];
   if (typeof v === "object" && v !== null) return (v.text || "").trim();
   return (v || "").trim();
-}
-
-function decryptPdf(pdfBytes) {
-  const tmpDir = os.tmpdir();
-  const inPath  = path.join(tmpDir, `avid_in_${Date.now()}.pdf`);
-  const outPath = path.join(tmpDir, `avid_out_${Date.now()}.pdf`);
-  try {
-    fs.writeFileSync(inPath, pdfBytes);
-    execSync(`qpdf --password="" --decrypt "${inPath}" "${outPath}"`, { timeout: 15000 });
-    return fs.readFileSync(outPath);
-  } catch (e) {
-    console.error("qpdf error:", e.message);
-    return pdfBytes;
-  } finally {
-    try { fs.unlinkSync(inPath); } catch {}
-    try { fs.unlinkSync(outPath); } catch {}
-  }
 }
 
 function buildFields(data) {
@@ -184,10 +163,9 @@ async function extractFromTranscript(transcript) {
 }
 
 async function fillPdf(pdfBytes, data) {
-  const decryptedBytes = decryptPdf(pdfBytes);
-  const pdfDoc = await PDFDocument.load(decryptedBytes, { ignoreEncryption: true });
-const pageCount = pdfDoc.getPageCount();
-console.log("PDF loaded, pages:", pageCount, "first page size:", pdfDoc.getPage(0).getSize());
+  const loadedDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+  const cleanBytes = await loadedDoc.save({ useObjectStreams: false });
+  const pdfDoc = await PDFDocument.load(cleanBytes);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const pages = pdfDoc.getPages();
   const fields = buildFields(data);
