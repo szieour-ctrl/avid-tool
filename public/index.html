@@ -73,11 +73,22 @@
     <div class="pane-label">1 — Otter.ai transcript</div>
     <textarea id="transcript" placeholder="Paste your Otter.ai transcript here...
 
-Tips:
-- State address, date, time, weather at the start
-- Say 'I am now in the [room name]' before each room
-- Number bedrooms and baths (Bedroom 1, Bath 1…)
-- Walk the full exterior perimeter"></textarea>
+Start every recording with these 6 lines:
+- Broker firm is: [Your Firm Name]
+- Inspector is: [Your Name]
+- Date is: [Today's Date]
+- Time is: [Current Time]
+- Weather is: [Conditions]
+- Others present are: [Names or None]
+
+Then announce each room:
+- I am now in the Entry...
+- I am now in the Living Room...
+- I am now in Bedroom 1...
+- I am now in Bath 1...
+- I am now at the Exterior...
+
+Property address and buyer/seller come from Lone Wolf automatically."></textarea>
     <div class="pane-label" style="margin-top:18px">2 — AVID PDF from Lone Wolf</div>
     <div class="upload-zone" id="dropZone" onclick="document.getElementById('pdfInput').click()">
       <input type="file" id="pdfInput" accept=".pdf" onchange="handleFile(this.files[0])">
