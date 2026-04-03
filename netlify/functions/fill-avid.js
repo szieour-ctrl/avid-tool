@@ -1,5 +1,3 @@
-
-// netlify/functions/fill-avid.js
 const Anthropic = require("@anthropic-ai/sdk");
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 
@@ -172,8 +170,6 @@ async function fillPdf(pdfBytes, data) {
     page.drawText(fld.text, { x: fld.x, y: fld.y, size: fld.fs || FS, font, color: rgb(0, 0, 0) });
   }
   return await pdfDoc.save({ useObjectStreams: false });
-}
-  return await pdfDoc.save();
 }
 
 exports.handler = async (event) => {
