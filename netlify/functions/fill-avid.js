@@ -159,7 +159,9 @@ async function extractFromTranscript(transcript) {
 }
 
 async function fillPdf(pdfBytes, data) {
-  const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+  const loadedDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+  const cleanBytes = await loadedDoc.save({ useObjectStreams: false });
+  const pdfDoc = await PDFDocument.load(cleanBytes);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const pages = pdfDoc.getPages();
   const fields = buildFields(data);
@@ -169,6 +171,8 @@ async function fillPdf(pdfBytes, data) {
     if (!page) continue;
     page.drawText(fld.text, { x: fld.x, y: fld.y, size: fld.fs || FS, font, color: rgb(0, 0, 0) });
   }
+  return await pdfDoc.save({ useObjectStreams: false });
+}
   return await pdfDoc.save();
 }
 
