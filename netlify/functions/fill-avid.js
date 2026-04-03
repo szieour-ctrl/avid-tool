@@ -46,11 +46,11 @@ function decryptPdf(pdfBytes) {
   const outPath = path.join(tmpDir, `avid_out_${Date.now()}.pdf`);
   try {
     fs.writeFileSync(inPath, pdfBytes);
-    execSync(`qpdf --decrypt "${inPath}" "${outPath}"`, { timeout: 15000 });
+    execSync(`qpdf --password="" --decrypt "${inPath}" "${outPath}"`, { timeout: 15000 });
     const decrypted = fs.readFileSync(outPath);
     return decrypted;
   } catch (e) {
-    // If qpdf fails (not encrypted or other issue), return original
+    console.error("qpdf error:", e.message);
     return pdfBytes;
   } finally {
     try { fs.unlinkSync(inPath); } catch {}
