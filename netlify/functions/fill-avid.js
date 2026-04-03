@@ -1,5 +1,4 @@
-const Anthropic = require("@anthropic-ai/sdk");
-// v2
+const Anthropic = require("@anthropic-ai/sdk"); // build 3
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 
 const PAGE_H = 792;
