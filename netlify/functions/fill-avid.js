@@ -186,6 +186,8 @@ async function extractFromTranscript(transcript) {
 async function fillPdf(pdfBytes, data) {
   const decryptedBytes = decryptPdf(pdfBytes);
   const pdfDoc = await PDFDocument.load(decryptedBytes, { ignoreEncryption: true });
+const pageCount = pdfDoc.getPageCount();
+console.log("PDF loaded, pages:", pageCount, "first page size:", pdfDoc.getPage(0).getSize());
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const pages = pdfDoc.getPages();
   const fields = buildFields(data);
