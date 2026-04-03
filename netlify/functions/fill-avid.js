@@ -1,5 +1,9 @@
 const Anthropic = require("@anthropic-ai/sdk");
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
+const { execSync } = require("child_process");
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
 
 const PAGE_H = 792;
 const FS = 8.5;
@@ -34,6 +38,24 @@ function getVal(d, key) {
   const v = d[key];
   if (typeof v === "object" && v !== null) return (v.text || "").trim();
   return (v || "").trim();
+}
+
+function decryptPdf(pdfBytes) {
+  const tmpDir = os.tmpdir();
+  const inPath  = path.join(tmpDir, `avid_in_${Date.now()}.pdf`);
+  const outPath = path.join(tmpDir, `avid_out_${Date.now()}.pdf`);
+  try {
+    fs.writeFileSync(inPath, pdfBytes);
+    execSync(`qpdf --decrypt "${inPath}" "${outPath}"`, { timeout: 15000 });
+    const decrypted = fs.readFileSync(outPath);
+    return decrypted;
+  } catch (e) {
+    // If qpdf fails (not encrypted or other issue), return original
+    return pdfBytes;
+  } finally {
+    try { fs.unlinkSync(inPath); } catch {}
+    try { fs.unlinkSync(outPath); } catch {}
+  }
 }
 
 function buildFields(data) {
@@ -137,6 +159,12 @@ JSON format:
 }
 
 Rules:
+- Extract broker_firm from phrases like "Broker firm is: [name]"
+- Extract inspector_name from phrases like "Inspector is: [name]"
+- Extract inspection_date from phrases like "Date is: [date]"
+- Extract inspection_time from phrases like "Time is: [time]"
+- Extract weather from phrases like "Weather is: [conditions]"
+- Extract other_persons_present from phrases like "Others present are: [names]"
 - "text": concise professional AVID-style language (1-3 sentences max). Use "Agent observed...", "Visible..." etc.
 - "status": "captured" = clear observation; "partial" = incomplete; "missing" = not addressed.
 - If a room wasn't mentioned, write "Not observed." with status "missing".
@@ -157,9 +185,8 @@ async function extractFromTranscript(transcript) {
 }
 
 async function fillPdf(pdfBytes, data) {
-  const loadedDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
-  const cleanBytes = await loadedDoc.save({ useObjectStreams: false });
-  const pdfDoc = await PDFDocument.load(cleanBytes);
+  const decryptedBytes = decryptPdf(pdfBytes);
+  const pdfDoc = await PDFDocument.load(decryptedBytes);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const pages = pdfDoc.getPages();
   const fields = buildFields(data);
@@ -169,7 +196,7 @@ async function fillPdf(pdfBytes, data) {
     if (!page) continue;
     page.drawText(fld.text, { x: fld.x, y: fld.y, size: fld.fs || FS, font, color: rgb(0, 0, 0) });
   }
-  return await pdfDoc.save({ useObjectStreams: false });
+  return await pdfDoc.save();
 }
 
 exports.handler = async (event) => {
