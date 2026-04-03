@@ -4,7 +4,7 @@
   functions = "netlify/functions"
 
 [functions]
-  node_bundler = "esbuild"
+  node_bundler = "zisi"
 
 # 30-second timeout for the fill-avid function (Claude call + PDF fill)
 [functions."fill-avid"]
