@@ -159,7 +159,7 @@ async function extractFromTranscript(transcript) {
 }
 
 async function fillPdf(pdfBytes, data) {
-  const pdfDoc = await PDFDocument.load(pdfBytes);
+  const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const pages = pdfDoc.getPages();
   const fields = buildFields(data);
